@@ -6,7 +6,7 @@
     background-color: white;
     color: black;
     font-family: Poppins;
-    font-size: 1em;
+    font-size: 1.1em;
 }
 
 .form-container {
@@ -23,12 +23,13 @@
 }
 
 .form-container input {
-    border: 2px solid black;
+    border: 1px solid black;
     border-radius: 5px;
     margin-top: 10px;
     margin-left: 5px;
-    height: 2em;
+    height: 1.5em;
     width: 9em;
+    padding: 5px;
 }
 
 .form-container button {
@@ -39,6 +40,8 @@
     font-family: Poppins;
     border-radius: 5px;
     margin-top: 10px;
+    cursor: pointer;
+    padding: 10px 20px;
 }
 
 .form-container .inputs {
