@@ -1,27 +1,29 @@
 import React, { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, useMap, Popup } from 'react-leaflet';
-import { Icon } from 'leaflet';
+import { MapContainer, TileLayer, Marker, useMap, Popup } from 'react-leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-const vesselIcon = new Icon({
-  iconUrl: '../assets/Frame 334.png',
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
-});
+import RotatedMarker from './rotatedmarker';
 
-const startIcon = new Icon({
+const startIcon = new L.Icon({
     iconUrl: '../assets/location_svgrepo.com (1).png',
     iconSize: [32, 32],
     iconAnchor: [16, 32],
 });
 
-const endIcon = new Icon({
+const endIcon = new L.Icon({
     iconUrl: '../assets/location_svgrepo.com (2).png',
     iconSize: [32, 32],
     iconAnchor: [16, 32],
 });
 
-const VesselMovement = ({ startCoords, endCoords, speed, refreshRate, setPosition }) => {
+const vesselIcon = new L.Icon({
+  iconUrl: '../assets/Frame 334.png',
+  iconSize: [62, 32],
+  iconAnchor: [16, 32],
+});
+
+const VesselMovement = ({ startCoords, endCoords, speed, refreshRate, setPosition, setRotation }) => {
   const map = useMap();
 
   React.useEffect(() => {
@@ -33,6 +35,9 @@ const VesselMovement = ({ startCoords, endCoords, speed, refreshRate, setPositio
     const steps = duration * refreshRate;
     const latStep = latDiff / steps;
     const lngStep = lngDiff / steps;
+
+    const initialAngle = (Math.atan2(lngDiff, latDiff) * 180 / Math.PI) - 90;
+    setRotation(initialAngle);
 
     let currentStep = 0;
 
@@ -51,7 +56,7 @@ const VesselMovement = ({ startCoords, endCoords, speed, refreshRate, setPositio
     }, 1000 / refreshRate);
 
     return () => clearInterval(interval);
-  }, [map, startCoords, endCoords, speed, refreshRate, setPosition]);
+  }, [map, startCoords, endCoords, speed, refreshRate, setPosition, setRotation]);
 
   return null;
 };
@@ -62,60 +67,70 @@ const VesselNavigationMap = () => {
   const [speed, setSpeed] = useState(20);
   const [refreshRate, setRefreshRate] = useState(2);
   const [position, setPosition] = useState(startCoords);
+  const [rotation, setRotation] = useState(90);
   const [isSimulationRunning, setIsSimulationRunning] = useState(false);
 
   const handleStartSimulation = (e) => {
     e.preventDefault();
     setPosition(startCoords);
     setIsSimulationRunning(true);
+
+    alert('Simulation Started')
   };
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      <div style={{ width: '300px', padding: '20px' }}>
+    <div className='input-form'>
+      <div className='form-container'>
         <form onSubmit={handleStartSimulation}>
           <h3>Navigation Settings</h3>
+
           <label>
             Start Coordinates:
+          </label>
             <input
               type="text"
               value={startCoords.join(', ')}
               onChange={(e) => setStartCoords(e.target.value.split(',').map(Number))}
             />
-          </label>
+            <br />
 
           <label>
             End Coordinates:
+          </label>
             <input
               type="text"
               value={endCoords.join(', ')}
               onChange={(e) => setEndCoords(e.target.value.split(',').map(Number))}
             />
-          </label>
+            <br />
 
           <label>
             Speed (km/h):
+          </label>
             <input
               type="number"
+              className='inputs'
               value={speed}
               onChange={(e) => setSpeed(Number(e.target.value))}
             />
-          </label>
+            <br />
 
           <label>
             Refresh Rate (FPS):
+          </label>
             <input
               type="number"
+              className='inputs'
               value={refreshRate}
               onChange={(e) => setRefreshRate(Number(e.target.value))}
             />
-          </label>
+          <br />
 
-          <button type="submit">Start</button>
+          <button type="submit">Start Simulation</button>
         </form>
       </div>
 
-      <div style={{ flex: 1 }}>
+      <div className='map-container'>
         <MapContainer
           center={startCoords}
           zoom={11}
@@ -134,11 +149,16 @@ const VesselNavigationMap = () => {
             <Popup>End Point</Popup>
         </Marker>
 
-        <Marker position={position} icon={vesselIcon}>
-            <Popup>Vessel</Popup>
-        </Marker>
+        {isSimulationRunning && (
+            <RotatedMarker 
+              position={position} 
+              icon={vesselIcon}
+              rotation={rotation}
+            >
+              <Popup>Vessel</Popup>
+            </RotatedMarker>
+          )}
 
-        <Polyline positions={[startCoords, endCoords]} color="red" />
           {isSimulationRunning && (
             <VesselMovement
               startCoords={startCoords}
@@ -146,8 +166,10 @@ const VesselNavigationMap = () => {
               speed={speed}
               refreshRate={refreshRate}
               setPosition={setPosition}
+              setRotation={setRotation}
             />
           )}
+          
         </MapContainer>
       </div>
     </div>
